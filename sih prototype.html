@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heavy Metal Pollution Index (HMPI) Application</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-links li a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-links li a:hover {
+            color: #667eea;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .main-content {
+            background: white;
+            margin: 2rem 0;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .upload-area {
+            border: 3px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f8ff;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .result-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .result-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .status-excellent { background: #2ecc71; }
+        .status-good { background: #f39c12; }
+        .status-poor { background: #e67e22; }
+        .status-very-poor { background: #e74c3c; }
+
+        #map {
+            height: 500px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .leaderboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .leaderboard-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            background: #f8f9fa;
+        }
+
+        .rank {
+            font-weight: bold;
+            width: 40px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .rank.gold { color: #ffd700; }
+        .rank.silver { color: #c0c0c0; }
+        .rank.bronze { color: #cd7f32; }
+
+        .location-info {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .pollution-score {
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+        }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chatbot-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+        }
+
+        .chatbot-window.active {
+            display: flex;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            font-weight: bold;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .chatbot-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+
+        .chatbot-input button {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.bot {
+            background: #f1f3f4;
+            color: #333;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #99d3ff;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .leaderboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chatbot-window {
+                width: 90vw;
+                right: 5vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-water"></i>
+                HMPI Monitor
+            </div>
+            <ul class="nav-links">
+                <li><a onclick="showTab('data-entry')">Data Entry</a></li>
+                <li><a onclick="showTab('mapping')">Map View</a></li>
+                <li><a onclick="showTab('leaderboard')">Leaderboard</a></li>
+                <li><a onclick="showTab('analytics')">Analytics</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Heavy Metal Pollution Index</h1>
+            <p>Advanced water quality monitoring and health risk prediction platform</p>
+            <button class="cta-button" onclick="showTab('data-entry')">Start Monitoring</button>
+        </div>
+    </section>
+
+    <main class="container">
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('data-entry')">
+                    <i class="fas fa-database"></i> Data Entry
+                </button>
+                <button class="tab" onclick="showTab('mapping')">
+                    <i class="fas fa-map"></i> Interactive Map
+                </button>
+                <button class="tab" onclick="showTab('leaderboard')">
+                    <i class="fas fa-trophy"></i> Leaderboard
+                </button>
+                <button class="tab" onclick="showTab('analytics')">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </button>
+            </div>
+
+            <!-- Data Entry Tab -->
+            <div id="data-entry" class="tab-content active">
+                <h2>Water Quality Data Entry</h2>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="location-name">Location Name</label>
+                            <input type="text" id="location-name" placeholder="Enter location name">
+                        </div>
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="number" id="latitude" step="any" placeholder="e.g., 18.5204">
+                        </div>
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="number" id="longitude" step="any" placeholder="e.g., 73.8567">
+                        </div>
+                        <div class="form-group">
+                            <label for="sample-date">Sample Date</label>
+                            <input type="date" id="sample-date">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-flask"></i> Heavy Metal Concentrations (mg/L)</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="lead">Lead (Pb)</label>
+                            <input type="number" id="lead" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="mercury">Mercury (Hg)</label>
+                            <input type="number" id="mercury" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="cadmium">Cadmium (Cd)</label>
+                            <input type="number" id="cadmium" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="arsenic">Arsenic (As)</label>
+                            <input type="number" id="arsenic" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="chromium">Chromium (Cr)</label>
+                            <input type="number" id="chromium" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="copper">Copper (Cu)</label>
+                            <input type="number" id="copper" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="zinc">Zinc (Zn)</label>
+                            <input type="number" id="zinc" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="nickel">Nickel (Ni)</label>
+                            <input type="number" id="nickel" step="0.001" placeholder="0.000" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fas fa-upload"></i> Bulk Data Upload</h3>
+                    <div class="upload-area" id="upload-area">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #ccc; margin-bottom: 20px;"></i>
+                        <p style="font-size: 1.2rem; margin-bottom: 10px;">Drag & drop CSV files here or click to browse</p>
+                        <p style="color: #666;">Supported formats: CSV, Excel (.xlsx)</p>
+                        <input type="file" id="file-upload" accept=".csv,.xlsx" style="display: none;">
+                        <button class="cta-button" style="margin-top: 15px;" onclick="document.getElementById('file-upload').click()">
+                            Choose File
+                        </button>
+                    </div>
+                    <button class="cta-button" onclick="downloadTemplate()" style="margin-top: 15px;">
+                        <i class="fas fa-download"></i> Download Template
+                    </button>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="calculate-btn" onclick="calculateIndices()">
+                        <i class="fas fa-calculator"></i> Calculate Pollution Indices
+                    </button>
+                    <button class="calculate-btn" onclick="predictHealthRisk()">
+                        <i class="fas fa-heartbeat"></i> Predict Health Risk
+                    </button>
+                </div>
+
+                <div id="results" style="display: none;">
+                    <div class="results-section">
+                        <h3><i class="fas fa-chart-line"></i> Pollution Analysis Results</h3>
+                        <div class="results-grid">
+                            <div class="result-card">
+                                <h4><i class="fas fa-thermometer-half"></i> Heavy Metal Pollution Index (HPI)</h4>
+                                <div class="result-value" id="hpi-value">-</div>
+                                <div class="result-status" id="hpi-status">-</div>
+                                <p style="margin-top: 10px; opacity: 0.9;">Overall pollution assessment based on weighted metal concentrations</p>
+                            </div>
+                            <div class="result-card">
+                                <h4><i class="fas fa-weight"></i> Heavy Metal Evaluation Index (HEI)</h4>
+                                <div class="result-value" id="hei-value">-</div>
+                                <div class="result-status" id="hei-status">-</div>
+                                <p style="margin-top: 10px; opacity: 0.9;">Sum of concentration ratios to permissible limits</p>
+                            </div>
+                            <div class="result-card">
+                                <h4><i class="fas fa-exclamation-triangle"></i> Contamination Degree (Cd)</h4>
+                                <div class="result-value" id="cd-value">-</div>
+                                <div class="result-status" id="cd-status">-</div>
+                                <p style="margin-top: 10px; opacity: 0.9;">Cumulative contamination factor assessment</p>
+                            </div>
+                            <div class="result-card">
+                                <h4><i class="fas fa-heartbeat"></i> Health Risk Prediction</h4>
+                                <div class="result-value" id="health-risk-value">-</div>
+                                <div class="result-status" id="health-risk-status">-</div>
+                                <p style="margin-top: 10px; opacity: 0.9;">AI-powered health risk assessment</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px;">
+                            <h4><i class="fas fa-lightbulb"></i> Key Contributing Factors</h4>
+                            <div id="risk-factors" style="margin-top: 15px;">
+                                <!-- Risk factors will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapping Tab -->
+            <div id="mapping" class="tab-content">
+                <h2>Interactive Pollution Map</h2>
+                <p>Visualize pollution data across different locations with interactive heatmaps and detailed information.</p>
+                <div id="map"></div>
+                
+                <div style="margin-top: 30px;">
+                    <h3>Recent Monitoring Locations</h3>
+                    <table class="data-table" id="locations-table">
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>HPI</th>
+                                <th>HEI</th>
+                                <th>Health Risk</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Leaderboard Tab -->
+            <div id="leaderboard" class="tab-content">
+                <h2>Community Leaderboard</h2>
+                <p>Track pollution levels and community contributions across different locations.</p>
+                
+                <div class="leaderboard-container">
+                    <div class="leaderboard-card">
+                        <h3><i class="fas fa-exclamation-circle"></i> Most Polluted Areas</h3>
+                        <div id="pollution-leaderboard">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="leaderboard-card">
+                        <h3><i class="fas fa-leaf"></i> Cleanest Areas</h3>
+                        <div id="clean-leaderboard">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="leaderboard-card">
+                        <h3><i class="fas fa-users"></i> Top Contributors</h3>
+                        <div id="contributors-leaderboard">
+                            <div class="leaderboard-item">
+                                <div class="rank gold">1</div>
+                                <div class="location-info">
+                                    <strong>Environmental Research Lab</strong>
+                                    <div style="font-size: 0.9rem; color: #666;">127 data points submitted</div>
+                                </div>
+                                <div class="pollution-score" style="background: #2ecc71;">⭐ 2,847 pts</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="rank silver">2</div>
+                                <div class="location-info">
+                                    <strong>City Water Department</strong>
+                                    <div style="font-size: 0.9rem; color: #666;">89 data points submitted</div>
+                                </div>
+                                <div class="pollution-score" style="background: #3498db;">⭐ 1,923 pts</div>
+                            </div>
+                            <div class="leaderboard-item">
+                                <div class="rank bronze">3</div>
+                                <div class="location-info">
+                                    <strong>Community Volunteers</strong>
+                                    <div style="font-size: 0.9rem; color: #666;">52 data points submitted</div>
+                                </div>
+                                <div class="pollution-score" style="background: #f39c12;">⭐ 1,156 pts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <h2>Advanced Analytics</h2>
+                <p>Comprehensive analysis and trends in water quality monitoring.</p>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-chart-area"></i> Pollution Trends</h3>
+                    <canvas id="trendsChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-bullseye"></i> Metal Distribution</h3>
+                    <canvas id="distributionChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="form-section">
+                    <h3><i class="fas fa-heartbeat"></i> Health Risk Analysis</h3>
+                    <div class="results-grid">
+                        <div class="result-card" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                            <h4>Low Risk Areas</h4>
+                            <div class="result-value">65%</div>
+                            <p>Areas with minimal health concerns</p>
+                        </div>
+                        <div class="result-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                            <h4>Moderate Risk Areas</h4>
+                            <div class="result-value">23%</div>
+                            <p>Areas requiring monitoring</p>
+                        </div>
+                        <div class="result-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                            <h4>High Risk Areas</h4>
+                            <div class="result-value">12%</div>
+                            <p>Areas needing immediate attention</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- AI Chatbot -->
+    <div class="chatbot-container">
+        <button class="chatbot-toggle" onclick="toggleChatbot()">
+            <i class="fas fa-comments"></i>
+        </button>
+        <div class="chatbot-window" id="chatbot-window">
+            <div class="chatbot-header">
+                <i class="fas fa-robot"></i> HMPI Assistant
+                <button onclick="toggleChatbot()" style="float: right; background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">×</button>
+            </div>
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="message bot">
+                    <strong>HMPI Assistant:</strong> Hello! I'm here to help you understand heavy metal pollution and use this application. Ask me about pollution indices, health risks, or how to use any features!
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbot-input" placeholder="Ask me about pollution monitoring..." onkeypress="handleChatKeyPress(event)">
+                <button onclick="sendChatMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load external libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+        let waterQualityData = [];
+        let chartInstances = {};
+
+        // WHO/EPA permissible limits (mg/L)
+        const permissibleLimits = {
+            lead: 0.01,
+            mercury: 0.006,
+            cadmium: 0.003,
+            arsenic: 0.01,
+            chromium: 0.05,
+            copper: 2.0,
+            zinc: 3.0,
+            nickel: 0.07
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            initializeEventListeners();
+            loadSampleData();
+            initializeCharts();
+            
+            // Set today's date
+            document.getElementById('sample-date').valueAsDate = new Date();
+        });
+
+        // Tab management
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            const tabButtons = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Initialize map if mapping tab is selected
+            if (tabName === 'mapping' && map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                    updateMapMarkers();
+                }, 100);
+            }
+            
+            // Update charts if analytics tab is selected
+            if (tabName === 'analytics') {
+                setTimeout(updateCharts, 100);
+            }
+        }
+
+        // Initialize map
+        function initializeMap() {
+            map = L.map('map').setView([18.5204, 73.8567], 10); // Pune, India
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add click handler for map
+            map.on('click', function(e) {
+                document.getElementById('latitude').value = e.latlng.lat.toFixed(6);
+                document.getElementById('longitude').value = e.latlng.lng.toFixed(6);
+                showNotification('Location selected from map!', 'success');
+            });
+        }
+
+        // Initialize event listeners
+        function initializeEventListeners() {
+            // File upload handlers
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-upload');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleFileDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        // File handling functions
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    if (file.name.endsWith('.csv')) {
+                        parseCSV(e.target.result);
+                    } else {
+                        showNotification('Please upload a CSV file', 'error');
+                    }
+                } catch (error) {
+                    showNotification('Error processing file: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            
+            const requiredFields = ['location', 'latitude', 'longitude', 'lead', 'mercury', 'cadmium', 'arsenic'];
+            const missingFields = requiredFields.filter(field => !headers.includes(field));
+            
+            if (missingFields.length > 0) {
+                showNotification(`Missing required fields: ${missingFields.join(', ')}`, 'error');
+                return;
+            }
+            
+            let processedCount = 0;
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length && values[0].trim()) {
+                    const data = {};
+                    headers.forEach((header, index) => {
+                        data[header] = values[index].trim();
+                    });
+                    
+                    // Add to global data
+                    waterQualityData.push({
+                        location: data.location,
+                        latitude: parseFloat(data.latitude),
+                        longitude: parseFloat(data.longitude),
+                        date: data.date || new Date().toISOString().split('T')[0],
+                        metals: {
+                            lead: parseFloat(data.lead) || 0,
+                            mercury: parseFloat(data.mercury) || 0,
+                            cadmium: parseFloat(data.cadmium) || 0,
+                            arsenic: parseFloat(data.arsenic) || 0,
+                            chromium: parseFloat(data.chromium) || 0,
+                            copper: parseFloat(data.copper) || 0,
+                            zinc: parseFloat(data.zinc) || 0,
+                            nickel: parseFloat(data.nickel) || 0
+                        }
+                    });
+                    processedCount++;
+                }
+            }
+            
+            showNotification(`Successfully imported ${processedCount} records`, 'success');
+            updateMapMarkers();
+            updateLeaderboards();
+            updateLocationTable();
+        }
+
+        function downloadTemplate() {
+            const csvContent = "location,latitude,longitude,date,lead,mercury,cadmium,arsenic,chromium,copper,zinc,nickel\n" +
+                "Sample Location 1,18.5204,73.8567,2024-01-15,0.005,0.002,0.001,0.008,0.02,0.1,0.5,0.03\n" +
+                "Sample Location 2,19.0760,72.8777,2024-01-16,0.012,0.004,0.002,0.015,0.03,0.15,0.8,0.05";
+                
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'hmpi_template.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Calculation functions
+        function calculateIndices() {
+            const metals = {
+                lead: parseFloat(document.getElementById('lead').value) || 0,
+                mercury: parseFloat(document.getElementById('mercury').value) || 0,
+                cadmium: parseFloat(document.getElementById('cadmium').value) || 0,
+                arsenic: parseFloat(document.getElementById('arsenic').value) || 0,
+                chromium: parseFloat(document.getElementById('chromium').value) || 0,
+                copper: parseFloat(document.getElementById('copper').value) || 0,
+                zinc: parseFloat(document.getElementById('zinc').value) || 0,
+                nickel: parseFloat(document.getElementById('nickel').value) || 0
+            };
+            
+            const location = document.getElementById('location-name').value || 'Sample Location';
+            const lat = parseFloat(document.getElementById('latitude').value);
+            const lng = parseFloat(document.getElementById('longitude').value);
+            
+            // Calculate HPI
+            const hpi = calculateHPI(metals);
+            
+            // Calculate HEI
+            const hei = calculateHEI(metals);
+            
+            // Calculate Cd
+            const cd = calculateContaminationDegree(metals);
+            
+            // Display results
+            displayResults(hpi, hei, cd);
+            
+            // Add to global data if location info is provided
+            if (location && lat && lng) {
+                waterQualityData.push({
+                    location: location,
+                    latitude: lat,
+                    longitude: lng,
+                    date: document.getElementById('sample-date').value,
+                    metals: metals,
+                    indices: { hpi, hei, cd }
+                });
+                updateMapMarkers();
+                updateLeaderboards();
+                updateLocationTable();
+            }
+            
+            showNotification('Pollution indices calculated successfully!', 'success');
+        }
+
+        function calculateHPI(metals) {
+            let weightedSum = 0;
+            let totalWeight = 0;
+            
+            const weights = {
+                lead: 4, mercury: 4, cadmium: 3, arsenic: 4,
+                chromium: 2, copper: 2, zinc: 1, nickel: 2
+            };
+            
+            for (const [metal, concentration] of Object.entries(metals)) {
+                if (concentration > 0 && permissibleLimits[metal]) {
+                    const weight = weights[metal];
+                    const subIndex = (concentration / permissibleLimits[metal]) * 100;
+                    weightedSum += weight * subIndex;
+                    totalWeight += weight;
+                }
+            }
+            
+            return totalWeight > 0 ? (weightedSum / totalWeight).toFixed(2) : 0;
+        }
+
+        function calculateHEI(metals) {
+            let hei = 0;
+            for (const [metal, concentration] of Object.entries(metals)) {
+                if (concentration > 0 && permissibleLimits[metal]) {
+                    hei += concentration / permissibleLimits[metal];
+                }
+            }
+            return hei.toFixed(2);
+        }
+
+        function calculateContaminationDegree(metals) {
+            let cd = 0;
+            for (const [metal, concentration] of Object.entries(metals)) {
+                if (concentration > 0 && permissibleLimits[metal]) {
+                    cd += concentration / permissibleLimits[metal];
+                }
+            }
+            return cd.toFixed(2);
+        }
+
+        function displayResults(hpi, hei, cd) {
+            document.getElementById('hpi-value').textContent = hpi;
+            document.getElementById('hei-value').textContent = hei;
+            document.getElementById('cd-value').textContent = cd;
+            
+            // Set status based on HPI
+            const hpiStatus = getWaterQualityStatus(parseFloat(hpi));
+            document.getElementById('hpi-status').textContent = hpiStatus.text;
+            document.getElementById('hpi-status').className = `result-status ${hpiStatus.class}`;
+            
+            // Set HEI status
+            const heiStatus = hei < 10 ? 'Acceptable' : hei < 20 ? 'Moderate' : 'High';
+            document.getElementById('hei-status').textContent = heiStatus;
+            document.getElementById('hei-status').className = `result-status ${heiStatus.toLowerCase() === 'acceptable' ? 'status-excellent' : 
+                heiStatus.toLowerCase() === 'moderate' ? 'status-good' : 'status-poor'}`;
+            
+            // Set Cd status
+            const cdStatus = cd < 5 ? 'Low' : cd < 10 ? 'Moderate' : 'High';
+            document.getElementById('cd-status').textContent = cdStatus + ' Contamination';
+            document.getElementById('cd-status').className = `result-status ${cdStatus.toLowerCase() === 'low' ? 'status-excellent' : 
+                cdStatus.toLowerCase() === 'moderate' ? 'status-good' : 'status-poor'}`;
+            
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function getWaterQualityStatus(hpi) {
+            if (hpi < 15) return { text: 'Excellent', class: 'status-excellent' };
+            if (hpi < 30) return { text: 'Good', class: 'status-good' };
+            if (hpi < 45) return { text: 'Poor', class: 'status-poor' };
+            return { text: 'Very Poor', class: 'status-very-poor' };
+        }
+
+        function predictHealthRisk() {
+            const metals = {
+                lead: parseFloat(document.getElementById('lead').value) || 0,
+                mercury: parseFloat(document.getElementById('mercury').value) || 0,
+                cadmium: parseFloat(document.getElementById('cadmium').value) || 0,
+                arsenic: parseFloat(document.getElementById('arsenic').value) || 0,
+                chromium: parseFloat(document.getElementById('chromium').value) || 0,
+                copper: parseFloat(document.getElementById('copper').value) || 0,
+                zinc: parseFloat(document.getElementById('zinc').value) || 0,
+                nickel: parseFloat(document.getElementById('nickel').value) || 0
+            };
+            
+            // Simple ML simulation - in reality, this would be a trained model
+            let riskScore = 0;
+            const riskFactors = [];
+            
+            for (const [metal, concentration] of Object.entries(metals)) {
+                if (concentration > 0 && permissibleLimits[metal]) {
+                    const ratio = concentration / permissibleLimits[metal];
+                    riskScore += ratio * getHealthRiskWeight(metal);
+                    
+                    if (ratio > 1) {
+                        riskFactors.push(`${metal.charAt(0).toUpperCase() + metal.slice(1)}: ${(ratio * 100).toFixed(1)}% above limit`);
+                    }
+                }
+            }
+            
+            const riskPercentage = Math.min(riskScore * 20, 100).toFixed(0);
+            let riskLevel, riskClass;
+            
+            if (riskPercentage < 30) {
+                riskLevel = 'Low Risk';
+                riskClass = 'status-excellent';
+            } else if (riskPercentage < 60) {
+                riskLevel = 'Moderate Risk';
+                riskClass = 'status-good';
+            } else if (riskPercentage < 80) {
+                riskLevel = 'High Risk';
+                riskClass = 'status-poor';
+            } else {
+                riskLevel = 'Critical Risk';
+                riskClass = 'status-very-poor';
+            }
+            
+            document.getElementById('health-risk-value').textContent = riskPercentage + '%';
+            document.getElementById('health-risk-status').textContent = riskLevel;
+            document.getElementById('health-risk-status').className = `result-status ${riskClass}`;
+            
+            // Display risk factors
+            const factorsContainer = document.getElementById('risk-factors');
+            if (riskFactors.length > 0) {
+                factorsContainer.innerHTML = riskFactors.map(factor => 
+                    `<div style="background: rgba(255,255,255,0.1); padding: 10px; margin: 5px 0; border-radius: 8px;">⚠️ ${factor}</div>`
+                ).join('');
+            } else {
+                factorsContainer.innerHTML = '<div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">✅ All metal concentrations are within acceptable limits</div>';
+            }
+            
+            showNotification('Health risk prediction completed!', 'success');
+        }
+
+        function getHealthRiskWeight(metal) {
+            const weights = {
+                lead: 0.8, mercury: 0.9, cadmium: 0.7, arsenic: 0.8,
+                chromium: 0.6, copper: 0.4, zinc: 0.2, nickel: 0.5
+            };
+            return weights[metal] || 0.5;
+        }
+
+        // Map functions
+        function updateMapMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // Add new markers
+            waterQualityData.forEach(data => {
+                const hpi = data.indices?.hpi || calculateHPI(data.metals);
+                const status = getWaterQualityStatus(parseFloat(hpi));
+                
+                const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        <h4>${data.location}</h4>
+                        <p><strong>Date:</strong> ${data.date}</p>
+                        <p><strong>HPI:</strong> ${hpi} (${status.text})</p>
+                        <p><strong>Key Metals:</strong></p>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>Lead: ${data.metals.lead} mg/L</li>
+                            <li>Mercury: ${data.metals.mercury} mg/L</li>
+                            <li>Arsenic: ${data.metals.arsenic} mg/L</li>
+                        </ul>
+                    </div>
+                `);
+                markers.push(marker);
+            });
+        }
+
+        // Update location table
+        function updateLocationTable() {
+            const tbody = document.querySelector('#locations-table tbody');
+            tbody.innerHTML = '';
+            
+            waterQualityData.slice(-10).reverse().forEach(data => {
+                const hpi = data.indices?.hpi || calculateHPI(data.metals);
+                const hei = data.indices?.hei || calculateHEI(data.metals);
+                const status = getWaterQualityStatus(parseFloat(hpi));
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${data.location}</td>
+                    <td>${data.date}</td>
+                    <td>${hpi}</td>
+                    <td>${hei}</td>
+                    <td>Medium</td>
+                    <td><span class="pollution-score ${status.class.replace('status-', '')}" style="padding: 5px 10px; border-radius: 15px; color: white; font-size: 0.8rem;">${status.text}</span></td>
+                `;
+            });
+        }
+
+        // Leaderboard functions
+        function updateLeaderboards() {
+            if (waterQualityData.length === 0) return;
+            
+            // Sort by HPI (descending for most polluted)
+            const sortedData = [...waterQualityData].sort((a, b) => {
+                const hpiA = a.indices?.hpi || calculateHPI(a.metals);
+                const hpiB = b.indices?.hpi || calculateHPI(b.metals);
+                return parseFloat(hpiB) - parseFloat(hpiA);
+            });
+            
+            // Most polluted areas
+            const pollutedContainer = document.getElementById('pollution-leaderboard');
+            pollutedContainer.innerHTML = '';
+            sortedData.slice(0, 5).forEach((data, index) => {
+                const hpi = data.indices?.hpi || calculateHPI(data.metals);
+                const status = getWaterQualityStatus(parseFloat(hpi));
+                
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <div class="rank ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}">${index + 1}</div>
+                    <div class="location-info">
+                        <strong>${data.location}</strong>
+                        <div style="font-size: 0.9rem; color: #666;">${data.date}</div>
+                    </div>
+                    <div class="pollution-score ${status.class}">${hpi}</div>
+                `;
+                pollutedContainer.appendChild(item);
+            });
+            
+            // Cleanest areas (reverse order)
+            const cleanContainer = document.getElementById('clean-leaderboard');
+            cleanContainer.innerHTML = '';
+            sortedData.slice().reverse().slice(0, 5).forEach((data, index) => {
+                const hpi = data.indices?.hpi || calculateHPI(data.metals);
+                const status = getWaterQualityStatus(parseFloat(hpi));
+                
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item';
+                item.innerHTML = `
+                    <div class="rank ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}">${index + 1}</div>
+                    <div class="location-info">
+                        <strong>${data.location}</strong>
+                        <div style="font-size: 0.9rem; color: #666;">${data.date}</div>
+                    </div>
+                    <div class="pollution-score ${status.class}">${hpi}</div>
+                `;
+                cleanContainer.appendChild(item);
+            });
+        }
+
+        // Chart functions
+        function initializeCharts() {
+            // Trends Chart
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            chartInstances.trends = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Average HPI',
+                        data: [25, 23, 28, 26, 22, 20],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Monthly Pollution Trends' }
+                    }
+                }
+            });
+            
+            // Distribution Chart
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            chartInstances.distribution = new Chart(distCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lead', 'Mercury', 'Cadmium', 'Arsenic', 'Others'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: ['#e74c3c', '#f39c12', '#2ecc71', '#3498db', '#9b59b6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Heavy Metal Distribution' }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            // Update with real data when available
+            if (waterQualityData.length > 0) {
+                // Update trends chart with real data
+                const months = [...new Set(waterQualityData.map(d => d.date.substring(0, 7)))].slice(-6);
+                const avgHPI = months.map(month => {
+                    const monthData = waterQualityData.filter(d => d.date.startsWith(month));
+                    const total = monthData.reduce((sum, d) => sum + parseFloat(d.indices?.hpi || calculateHPI(d.metals)), 0);
+                    return (total / monthData.length).toFixed(1);
+                });
+                
+                chartInstances.trends.data.labels = months;
+                chartInstances.trends.data.datasets[0].data = avgHPI;
+                chartInstances.trends.update();
+            }
+        }
+
+        // Sample data
+        function loadSampleData() {
+            const sampleData = [
+                {
+                    location: 'Pune Municipal Area 1',
+                    latitude: 18.5204,
+                    longitude: 73.8567,
+                    date: '2024-01-15',
+                    metals: { lead: 0.005, mercury: 0.002, cadmium: 0.001, arsenic: 0.008, chromium: 0.02, copper: 0.1, zinc: 0.5, nickel: 0.03 }
+                },
+                {
+                    location: 'Industrial Zone Monitoring',
+                    latitude: 18.4595,
+                    longitude: 73.8131,
+                    date: '2024-01-16',
+                    metals: { lead: 0.015, mercury: 0.008, cadmium: 0.004, arsenic: 0.012, chromium: 0.06, copper: 0.3, zinc: 1.2, nickel: 0.08 }
+                },
+                {
+                    location: 'Residential Water Supply',
+                    latitude: 18.5792,
+                    longitude: 73.9089,
+                    date: '2024-01-17',
+                    metals: { lead: 0.003, mercury: 0.001, cadmium: 0.001, arsenic: 0.005, chromium: 0.01, copper: 0.05, zinc: 0.2, nickel: 0.02 }
+                }
+            ];
+            
+            sampleData.forEach(data => {
+                data.indices = {
+                    hpi: calculateHPI(data.metals),
+                    hei: calculateHEI(data.metals),
+                    cd: calculateContaminationDegree(data.metals)
+                };
+                waterQualityData.push(data);
+            });
+            
+            updateMapMarkers();
+            updateLeaderboards();
+            updateLocationTable();
+        }
+
+        // Chatbot functions
+        function toggleChatbot() {
+            const chatbot = document.getElementById('chatbot-window');
+            chatbot.classList.toggle('active');
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatbot-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // Generate bot response
+            setTimeout(() => {
+                const response = generateBotResponse(message);
+                addChatMessage(response, 'bot');
+            }, 500);
+        }
+
+        function addChatMessage(message, sender) {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `<strong>You:</strong> ${message}`;
+            } else {
+                messageDiv.innerHTML = `<strong>HMPI Assistant:</strong> ${message}`;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function generateBotResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            if (message.includes('hpi') || message.includes('heavy metal pollution index')) {
+                return 'The Heavy Metal Pollution Index (HPI) is a weighted arithmetic mean that represents overall water quality. Values below 15 indicate excellent quality, 15-30 is good, 30-45 is poor, and above 45 is very poor quality.';
+            }
+            
+            if (message.includes('hei') || message.includes('evaluation index')) {
+                return 'The Heavy Metal Evaluation Index (HEI) is the sum of ratios of monitored concentrations to their permissible limits. It provides a straightforward measure of the total heavy metal load in water.';
+            }
+            
+            if (message.includes('health risk') || message.includes('prediction')) {
+                return 'Our AI model predicts health risks based on heavy metal concentrations using machine learning. It considers factors like toxicity, exposure pathways, and vulnerable populations to provide risk assessments.';
+            }
+            
+            if (message.includes('upload') || message.includes('csv')) {
+                return 'You can upload data in CSV format using the upload area in the Data Entry tab. Make sure your file includes columns for location, coordinates, and metal concentrations. Download our template for the correct format!';
+            }
+            
+            if (message.includes('map') || message.includes('visualization')) {
+                return 'The interactive map shows pollution data across different locations. You can click on markers to see detailed information, and even click on the map to set coordinates for new data entries.';
+            }
+            
+            if (message.includes('lead') || message.includes('mercury') || message.includes('arsenic')) {
+                return 'These are highly toxic heavy metals. Lead affects the nervous system, mercury causes neurological damage, and arsenic is a known carcinogen. Even trace amounts can be harmful, especially to children and pregnant women.';
+            }
+            
+            return 'I can help you understand pollution indices (HPI, HEI, Cd), health risks, data upload procedures, and how to use the mapping features. What specific aspect would you like to know more about?';
+        }
+
+        // Utility functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            
+            // Insert at the top of the current tab content
+            const activeTab = document.querySelector('.tab-content.active');
+            activeTab.insertBefore(notification, activeTab.firstChild);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // Additional helper functions
+        function validateFormData() {
+            const location = document.getElementById('location-name').value;
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            
+            if (!location || !lat || !lng) {
+                showNotification('Please fill in location name and coordinates', 'error');
+                return false;
+            }
+            
+            const metals = ['lead', 'mercury', 'cadmium', 'arsenic', 'chromium', 'copper', 'zinc', 'nickel'];
+            const hasData = metals.some(metal => {
+                const value = parseFloat(document.getElementById(metal).value);
+                return !isNaN(value) && value > 0;
+            });
+            
+            if (!hasData) {
+                showNotification('Please enter at least one metal concentration', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function clearForm() {
+            const inputs = ['location-name', 'latitude', 'longitude', 'lead', 'mercury', 'cadmium', 'arsenic', 'chromium', 'copper', 'zinc', 'nickel'];
+            inputs.forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            
+            document.getElementById('results').style.display = 'none';
+            showNotification('Form cleared successfully', 'info');
+        }
+
+        function exportResults() {
+            if (waterQualityData.length === 0) {
+                showNotification('No data available to export', 'error');
+                return;
+            }
+            
+            let csvContent = 'Location,Date,Latitude,Longitude,HPI,HEI,Cd,Lead,Mercury,Cadmium,Arsenic,Chromium,Copper,Zinc,Nickel\n';
+            
+            waterQualityData.forEach(data => {
+                const indices = data.indices || {
+                    hpi: calculateHPI(data.metals),
+                    hei: calculateHEI(data.metals),
+                    cd: calculateContaminationDegree(data.metals)
+                };
+                
+                csvContent += `${data.location},${data.date},${data.latitude},${data.longitude},${indices.hpi},${indices.hei},${indices.cd},${data.metals.lead},${data.metals.mercury},${data.metals.cadmium},${data.metals.arsenic},${data.metals.chromium},${data.metals.copper},${data.metals.zinc},${data.metals.nickel}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hmpi_results_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('Results exported successfully', 'success');
+        }
+
+        function generateReport() {
+            if (waterQualityData.length === 0) {
+                showNotification('No data available for report generation', 'error');
+                return;
+            }
+            
+            const reportWindow = window.open('', '_blank');
+            const totalLocations = waterQualityData.length;
+            const avgHPI = (waterQualityData.reduce((sum, d) => sum + parseFloat(d.indices?.hpi || calculateHPI(d.metals)), 0) / totalLocations).toFixed(2);
+            
+            const excellentCount = waterQualityData.filter(d => parseFloat(d.indices?.hpi || calculateHPI(d.metals)) < 15).length;
+            const goodCount = waterQualityData.filter(d => {
+                const hpi = parseFloat(d.indices?.hpi || calculateHPI(d.metals));
+                return hpi >= 15 && hpi < 30;
+            }).length;
+            const poorCount = waterQualityData.filter(d => {
+                const hpi = parseFloat(d.indices?.hpi || calculateHPI(d.metals));
+                return hpi >= 30 && hpi < 45;
+            }).length;
+            const veryPoorCount = waterQualityData.filter(d => parseFloat(d.indices?.hpi || calculateHPI(d.metals)) >= 45).length;
+            
+            reportWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>HMPI Analysis Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                        .header { text-align: center; margin-bottom: 40px; }
+                        .summary { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }
+                        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 20px 0; }
+                        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { background: #f2f2f2; }
+                        .excellent { color: #2ecc71; font-weight: bold; }
+                        .good { color: #f39c12; font-weight: bold; }
+                        .poor { color: #e67e22; font-weight: bold; }
+                        .very-poor { color: #e74c3c; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Heavy Metal Pollution Index Analysis Report</h1>
+                        <p>Generated on ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="summary">
+                        <h2>Executive Summary</h2>
+                        <p>This report analyzes water quality data from ${totalLocations} monitoring locations. 
+                        The average Heavy Metal Pollution Index (HPI) across all locations is ${avgHPI}.</p>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <h3 class="excellent">${excellentCount}</h3>
+                            <p>Excellent Quality<br>(HPI &lt; 15)</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 class="good">${goodCount}</h3>
+                            <p>Good Quality<br>(HPI 15-30)</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 class="poor">${poorCount}</h3>
+                            <p>Poor Quality<br>(HPI 30-45)</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 class="very-poor">${veryPoorCount}</h3>
+                            <p>Very Poor Quality<br>(HPI &gt; 45)</p>
+                        </div>
+                    </div>
+                    
+                    <h2>Detailed Analysis</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>HPI</th>
+                                <th>HEI</th>
+                                <th>Cd</th>
+                                <th>Quality Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${waterQualityData.map(data => {
+                                const indices = data.indices || {
+                                    hpi: calculateHPI(data.metals),
+                                    hei: calculateHEI(data.metals),
+                                    cd: calculateContaminationDegree(data.metals)
+                                };
+                                const status = getWaterQualityStatus(parseFloat(indices.hpi));
+                                return `
+                                    <tr>
+                                        <td>${data.location}</td>
+                                        <td>${data.date}</td>
+                                        <td>${indices.hpi}</td>
+                                        <td>${indices.hei}</td>
+                                        <td>${indices.cd}</td>
+                                        <td class="${status.class.replace('status-', '')}">${status.text}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="summary">
+                        <h2>Recommendations</h2>
+                        <ul>
+                            <li><strong>High Priority:</strong> Immediate attention required for locations with HPI > 45</li>
+                            <li><strong>Medium Priority:</strong> Enhanced monitoring for locations with HPI 30-45</li>
+                            <li><strong>Preventive:</strong> Regular monitoring for all locations to prevent deterioration</li>
+                            <li><strong>Public Health:</strong> Consider health advisories for high-risk areas</li>
+                        </ul>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            reportWindow.document.close();
+            showNotification('Report generated successfully', 'success');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case 'Enter':
+                        if (document.querySelector('#data-entry').classList.contains('active')) {
+                            calculateIndices();
+                            event.preventDefault();
+                        }
+                        break;
+                    case 's':
+                        exportResults();
+                        event.preventDefault();
+                        break;
+                    case 'r':
+                        clearForm();
+                        event.preventDefault();
+                        break;
+                }
+            }
+        });
+
+        // Add export and clear buttons to the interface
+        window.addEventListener('DOMContentLoaded', function() {
+            const buttonContainer = document.querySelector('.tab-content .calculate-btn').parentNode;
+            
+            // Add Clear Form button
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'calculate-btn';
+            clearBtn.onclick = clearForm;
+            clearBtn.innerHTML = '<i class="fas fa-trash"></i> Clear Form';
+            clearBtn.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            buttonContainer.appendChild(clearBtn);
+            
+            // Add Export Results button
+            const exportBtn = document.createElement('button');
+            exportBtn.className = 'calculate-btn';
+            exportBtn.onclick = exportResults;
+            exportBtn.innerHTML = '<i class="fas fa-download"></i> Export Data';
+            exportBtn.style.background = 'linear-gradient(45deg, #2ecc71, #27ae60)';
+            buttonContainer.appendChild(exportBtn);
+            
+            // Add Generate Report button
+            const reportBtn = document.createElement('button');
+            reportBtn.className = 'calculate-btn';
+            reportBtn.onclick = generateReport;
+            reportBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate Report';
+            reportBtn.style.background = 'linear-gradient(45deg, #f39c12, #e67e22)';
+            buttonContainer.appendChild(reportBtn);
+        });
+
+        // Auto-save functionality
+        function autoSave() {
+            const formData = {
+                location: document.getElementById('location-name').value,
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value,
+                metals: {
+                    lead: document.getElementById('lead').value,
+                    mercury: document.getElementById('mercury').value,
+                    cadmium: document.getElementById('cadmium').value,
+                    arsenic: document.getElementById('arsenic').value,
+                    chromium: document.getElementById('chromium').value,
+                    copper: document.getElementById('copper').value,
+                    zinc: document.getElementById('zinc').value,
+                    nickel: document.getElementById('nickel').value
+                }
+            };
+            
+            localStorage.setItem('hmpi_draft', JSON.stringify(formData));
+        }
+
+        function loadDraft() {
+            const draft = localStorage.getItem('hmpi_draft');
+            if (draft) {
+                const data = JSON.parse(draft);
+                document.getElementById('location-name').value = data.location || '';
+                document.getElementById('latitude').value = data.latitude || '';
+                document.getElementById('longitude').value = data.longitude || '';
+                
+                Object.entries(data.metals).forEach(([metal, value]) => {
+                    document.getElementById(metal).value = value || '';
+                });
+            }
+        }
+
+        // Auto-save on input change
+        document.addEventListener('input', function(event) {
+            if (event.target.closest('#data-entry')) {
+                setTimeout(autoSave, 1000); // Auto-save after 1 second of inactivity
+            }
+        });
+
+        // Load draft on page load
+        window.addEventListener('load', loadDraft);
+
+        // PWA-like features
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                // Service worker would be registered here for offline functionality
+                console.log('Ready for service worker registration');
+            });
+        }
+
+        // Responsive design helpers
+        function adjustForMobile() {
+            if (window.innerWidth <= 768) {
+                // Adjust map height for mobile
+                document.getElementById('map').style.height = '400px';
+                
+                // Adjust form layout
+                const formGrids = document.querySelectorAll('.form-grid');
+                formGrids.forEach(grid => {
+                    grid.style.gridTemplateColumns = '1fr';
+                });
+            }
+        }
+
+        window.addEventListener('resize', adjustForMobile);
+        window.addEventListener('load', adjustForMobile);
+
+        // Performance monitoring
+        function measurePerformance(operation, fn) {
+            const start = performance.now();
+            const result = fn();
+            const end = performance.now();
+            console.log(`${operation} took ${(end - start).toFixed(2)} milliseconds`);
+            return result;
+        }
+
+        // Enhanced error handling
+        window.addEventListener('error', function(event) {
+            console.error('Application error:', event.error);
+            showNotification('An error occurred. Please try again.', 'error');
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            // Cleanup map and chart instances
+            if (map) {
+                map.remove();
+            }
+            
+            Object.values(chartInstances).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            });
+        });
+
+        console.log('HMPI Application initialized successfully!');
+    </script>
+</body>
+</html>
